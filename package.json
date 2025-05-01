@@ -6,7 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migration:create": "dotenv -e .env.local -- sequelize-cli migration:create",
+    "migrate": "dotenv -e .env.local -- sequelize-cli db:migrate",
+    "migrate:rollback": "dotenv -e .env.local -- sequelize-cli db:migrate:undo",
+    "migrate:rollback:all": "dotenv -e .env.local -- sequelize-cli db:migrate:undo:all",
+    "migrate:prod": "dotenv -e .env.production -- sequelize-cli db:migrate --env production"
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",
@@ -17,6 +22,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "decrypt": "^0.0.1",
+    "google-auth-library": "^9.15.1",
     "jose": "^6.0.10",
     "lucide-react": "^0.503.0",
     "next": "15.3.1",
@@ -25,6 +31,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sequelize": "^6.37.7",
+    "sequelize-typescript": "^2.1.6",
     "sqlite3": "^5.1.7",
     "tailwind-merge": "^3.2.0",
     "zod": "^3.24.3"
@@ -33,11 +40,14 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.11.14",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/sequelize": "^4.28.20",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
+    "sequelize-cli": "^6.6.2",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.2.8",
     "typescript": "^5"

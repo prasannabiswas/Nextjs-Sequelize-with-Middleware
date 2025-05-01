@@ -2,9 +2,10 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { dbInit, Member } from "@/models";
 import { createSession, deleteSession } from "@/utils/session";
+import { OAuth2Client } from "google-auth-library";
 import { comparePassword } from "@/utils/password";
+import { getModels } from "@/lib/connection/connection";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }).trim(),
@@ -15,8 +16,6 @@ const loginSchema = z.object({
 });
 
 export async function login(prevState: any, formData: FormData) {
-  await dbInit();
-
   const formValues = Object.fromEntries(formData);
   const result = loginSchema.safeParse(formValues);
 
@@ -28,44 +27,99 @@ export async function login(prevState: any, formData: FormData) {
 
   const { email, password } = result.data;
 
+  const models = await getModels();
+  const existing = await models.members.findOne({ where: { email } });
+
+  if (!existing) {
+    return { errors: { email: ["Email does not exist."] }, values: formValues };
+  }
+
+  const isValid = await comparePassword(password, existing.dataValues.password);
+
+  if (!isValid) {
+    return { errors: { password: ["Invalid password."] }, values: formValues };
+  }
+
+  await createSession(
+    existing.dataValues.id,
+    existing.dataValues.name,
+    existing.dataValues.email
+  );
+
+  redirect("/dashboard");
+}
+
+const client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID!,
+  process.env.GOOGLE_CLIENT_SECRET!,
+  "http://localhost:3000/api/auth/google/callback"
+);
+
+export async function googleLoginCallback(prevState: any, searchParams: URLSearchParams) {
+  const code = searchParams.get("code");
+
+  if (!code) {
+    return {
+      errors: {
+        general: ["Missing code from Google"],
+      },
+    };
+  }
+
   try {
-    const existing = await Member.findOne({ where: { email } });
-    if (!existing) {
+    // Get token from code
+    const { tokens } = await client.getToken(code);
+    const ticket = await client.verifyIdToken({
+      idToken: tokens.id_token!,
+      audience: process.env.GOOGLE_CLIENT_ID!,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload?.sub || !payload.email) {
       return {
         errors: {
-          email: ["Email does not exist."],
+          general: ["Invalid Google account payload"],
         },
-        values: formValues,
       };
     }
 
-    const isValid = await comparePassword(password, existing.password);
-    if (!isValid) {
+    const { name, email } = payload;
+
+    const models = await getModels();
+
+    let user = await models.members.findOne({ where: { email } });
+    if (user) {
       return {
         errors: {
-          password: ["Invalid password."],
+          email: ["Email is already registered"],
         },
-        values: formValues,
       };
+    }
+
+    if (!user) {
+      user = await models.members.create({
+        name: name || "Google User",
+        email,
+        gender: "prefer_not_to_say",
+        password: "12345678",
+      });
     }
 
     await createSession(
-      existing.id.toString(),
-      existing.name,
-      existing.email,
-      parseInt(existing.mobile_number ?? "0", 10)
+      user.dataValues.id,
+      user.dataValues.name,
+      user.dataValues.email,
     );
-
-    redirect("/");
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("Google login failed:", err);
     return {
       errors: {
-        general: ["Something went wrong. Try again later."],
+        general: ["Login with Google failed. Please try again."],
       },
-      values: formValues,
     };
   }
+  redirect("/dashboard");
 }
 
 export async function logout() {

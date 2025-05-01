@@ -1,4 +1,4 @@
-import { Member } from "@/models";
+import { Member } from "@/lib/connection/connection";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 

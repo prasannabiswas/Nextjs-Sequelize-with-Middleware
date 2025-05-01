@@ -5,29 +5,10 @@ import { cookies } from "next/headers";
 const secretKey = process.env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
 
-
-export async function createSession(userId: string, userName: string, useEmail: string, userMoileNumber: number ) {
-  const cookiesStore = await cookies();
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const session = await encrypt({ userId, userName, useEmail, userMoileNumber, expiresAt });
-
-  cookiesStore.set("session", session, {
-    httpOnly: true,
-    secure: true,
-    expires: expiresAt,
-  });
-}
-
-export async function deleteSession() {
-  const cookiesStore = await cookies();
-  cookiesStore.delete("session");
-}
-
 type SessionPayload = {
-  userId: string;
-  userName: string; 
-  useEmail: string;
-  userMoileNumber: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
   expiresAt: Date;
 };
 
@@ -48,4 +29,43 @@ export async function decrypt(session: string | undefined = "") {
   } catch (error) {
     console.log("Failed to verify session");
   }
+}
+
+export async function createSession(
+  userId: number,
+  userName: string,
+  userEmail: string
+) {
+  const cookiesStore = await cookies();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const session = await encrypt({
+    userId,
+    userName,
+    userEmail,
+    expiresAt,
+  });
+
+  cookiesStore.set("session", session, {
+    httpOnly: false, // ✅ Now middleware can read it
+    secure: true,
+    expires: expiresAt,
+    path: "/", // Ensures visibility across the app
+    sameSite: "lax",
+  });
+}
+
+export async function verifySession() {
+  const cookiesStore = await cookies();
+  const cookie = cookiesStore.get("session")?.value;
+  const session = await decrypt(cookie);
+  if (!session?.userId) {
+    return null;
+  }
+
+  return { userId: session.userId };
+}
+
+export async function deleteSession() {
+  const cookiesStore = await cookies();
+  cookiesStore.delete("session");
 }

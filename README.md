@@ -55,3 +55,36 @@
 ├── /public                      # Static assets (images, fonts, etc.)
 │
 └── .env                         # Environment variables (Postgres, Redis, JWT Secret)
+
+
+<!-- Sequelize setup -->
+
+Step 1: 
+$ npm i sequelize-typescript --save
+$ npm install --save-dev sequelize-cli
+$ npm install --save-dev dotenv-cli
+$ npx sequelize-cli init
+
+Step 2:
+Create a database folder in root of next.
+Move config, seeder, migrations folder inside database created folder, delete model folder.
+As per the files indside the database edit those files.
+Add `.sequelizerc` file in root of the project and follow this file structure.
+Add scripts in package.json file for migration.
+
+Step 3:
+Run 
+$ npm run migration:create -- --name `table_name_as_per_the_need`
+Then change the migrated file from migrations to new migration for up and down.
+Again run,
+$ npm run migrate
+
+
+Step 4: 
+Install running commands
+$ npm install -g sequelize-auto
+$ npm install -g pg pg-hstore
+Run 
+$ sequelize-auto -h localhost -d `db_name_as_per_the_need` -u `user_name_as_per_the_need` -x root -p 5432 -e postgres -o "./models" -l ts --caseModel p --caseFile c
+ --alternatively,
+$ npx sequelize-auto -o "./models" -d circle_dev -h localhost -u postgres -p 5432 -x root -e postgres -l ts
