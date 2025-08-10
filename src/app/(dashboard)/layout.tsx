@@ -1,31 +1,38 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import "@/app/global.css";
+import DasboardLayout from "@/components/dashboard/layout";
+import { ThemeProvider } from "@/providers/theme-provider";
 
 const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-    title: "Circle | Dashboard",
-    description: "Circle A one community to learn, chat and grow.",
+  title: "WatMart",
+  description: "Your One-Stop Shop for Electric & Electronic Products",
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    return (
-        <section
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-            {children}
-        </section>
-    );
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider>
+          <DasboardLayout>{children}</DasboardLayout>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
 }
