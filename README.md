@@ -1,90 +1,183 @@
-/src
-│
-├── /app
-│   ├── /page.ts                 # Main page (Home)
-│   ├── /layout.ts               # Root layout with dbInit() call, providers/styles   
-│   ├── /globals.css             # Global styles (CSS/Tailwind)
-│   ├── /login
-│   │   └── /page.tsx          # Login Page UI + form
-│   ├── /signup
-│   │   └── /page.tsx          # Signup Page UI + form
-│
-├── /api
-│   ├── /themes
-│   │    └── route.ts            # API: GET/POST themes
-│   ├── /auth
-│   │    └── route.ts            # API: Auth login/signup handlers
-│   └── /users
-│        └── route.ts            # API: User CRUD
-│
-├── /components
-│   └── ThemeSwitcher.ts         # UI Component for theme switching
-│
-├── /config
-│   ├── config.ts                # Sequelize options config (optional)
-│   └── redis.ts                 # Redis connection setup
-│
-├── /context
-│   └── ThemeContext.ts          # Global Theme State (React Context)
-│
-├── /lib
-│   ├── db.ts                    # Sequelize instance (Postgres connection)
-│   └── rateLimiter.ts           # Rate limiting logic (using Redis)
-│
-├── /middleware
-│   ├── protectedRoute.ts        # Auth middleware (JWT/session)
-│   ├── auth.ts                  # Auth middleware (JWT/session) - (you might merge these two later)
-│   └── rateLimit.ts             # Rate limiter middleware (Redis)
-│
-├── /models
-│   ├── index.ts                 # Sequelize init, dbInit(), and sync models
-│   ├── theme.ts                 # Theme model
-│   └── user.ts                  # User model (Signup/Login related)
-│
-├── /services
-│   ├── themeService.ts          # Business logic for themes
-│   └── userService.ts           # Business logic for user signup/login (bcrypt, jwt etc.)
-│
-├── /utils
-│   ├── session.ts               # JWT encryption, decryption, and session storage
-│   ├── helpers.ts               # Common utility functions
-│   └── validators.ts            # Data validation for incoming requests
-│
-├── middleware.ts                # Next.js middleware (for protected routes)
-│
-├── /public                      # Static assets (images, fonts, etc.)
-│
-└── .env                         # Environment variables (Postgres, Redis, JWT Secret)
+# Create the README.txt content (same as README.md)
 
+readme_txt_path = Path("/mnt/data/readme.txt")
+readme_txt_path.write_text("""# Circle Next App
 
-<!-- Sequelize setup -->
+A Next.js + TypeScript application using Sequelize ORM with PostgreSQL.
 
-Step 1: 
-$ npm i sequelize-typescript --save
-$ npm install --save-dev sequelize-cli
-$ npm install --save-dev dotenv-cli
-$ npx sequelize-cli init
+## Table of Contents
 
-Step 2:
-Create a database folder in root of next.
-Move config, seeder, migrations folder inside database created folder, delete model folder.
-As per the files indside the database edit those files.
-Add `.sequelizerc` file in root of the project and follow this file structure.
-Add scripts in package.json file for migration.
+- [Tech Stack](#tech-stack)
+- [Project Setup](#project-setup)
+- [Database Setup](#database-setup)
+- [Migrations](#migrations)
+- [Generating Models from an Existing DB](#generating-models-from-an-existing-db)
+- [Scripts](#scripts)
+- [Environment Variables](#environment-variables)
 
-Step 3:
-Run 
-$ npm run migration:create -- --name `table_name_as_per_the_need`
-Then change the migrated file from migrations to new migration for up and down.
-Again run,
-$ npm run migrate
+---
 
+## Tech Stack
 
-Step 4: 
-Install running commands
-$ npm install -g sequelize-auto
-$ npm install -g pg pg-hstore
-Run 
-$ sequelize-auto -h localhost -d `db_name_as_per_the_need` -u `user_name_as_per_the_need` -x root -p 5432 -e postgres -o "./models" -l ts --caseModel p --caseFile c
- --alternatively,
-$ npx sequelize-auto -o "./models" -d circle_dev -h localhost -u postgres -p 5432 -x root -e postgres -l ts
+- **Frontend**: [Next.js](https://nextjs.org/) (React 19, Turbopack)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **ORM**: [Sequelize](https://sequelize.org/)
+- **Database**: PostgreSQL
+- **Auth & Crypto**: bcryptjs, jose
+- **TypeScript** for static typing
+
+---
+
+## Project Setup
+
+1. **Install dependencies**
+   npm install
+
+2. **Run in development**
+   npm run dev
+
+3. **Build for production**
+   npm run build
+   npm start
+
+---
+
+## Database Setup
+
+This project uses Sequelize CLI with PostgreSQL.
+
+### 1. Install required dependencies
+
+Already included in package.json:
+npm install sequelize pg pg-hstore
+npm install --save-dev sequelize-cli dotenv-cli
+
+### 2. Initialize Sequelize CLI
+
+npx sequelize-cli init
+
+Then move the generated config/, migrations/, and seeders/ folders into a new database/ folder.
+
+### 3. .sequelizerc configuration
+
+In the project root, create .sequelizerc:
+
+const path = require('path');
+
+module.exports = {
+'config': path.resolve('database', 'config', 'config.js'),
+'migrations-path': path.resolve('database', 'migrations'),
+'seeders-path': path.resolve('database', 'seeders')
+};
+
+### 4. Database config
+
+database/config/config.js:
+require('dotenv').config();
+
+module.exports = {
+development: {
+url: process.env.DATABASE_URL,
+dialect: 'postgres',
+logging: false
+},
+production: {
+url: process.env.DATABASE_URL,
+dialect: 'postgres',
+dialectOptions: process.env.PGSSLMODE === 'require'
+? { ssl: { require: true } }
+: {},
+logging: false
+}
+};
+
+---
+
+## Migrations
+
+### Create a migration
+
+npm run migration:create -- --name create_users
+
+### Apply migrations
+
+npm run migrate
+
+### Rollback last migration
+
+npm run migrate:rollback
+
+### Rollback all migrations
+
+npm run migrate:rollback:all
+
+### Run migrations in production
+
+npm run migrate:prod
+
+---
+
+## Generating Models from an Existing DB
+
+You can reverse-engineer models from an existing PostgreSQL database using sequelize-auto.
+
+### Example:
+
+npx sequelize-auto \
+ -o "./models" \
+ -d circle_dev \
+ -h localhost \
+ -u postgres \
+ -p 5432 \
+ -x root \
+ -e postgres \
+ -l ts \
+ --caseModel p \
+ --caseFile c
+
+--caseModel p → PascalCase model names
+--caseFile c → camelCase filenames
+
+---
+
+## Scripts
+
+From package.json:
+
+dev → Run Next.js in dev mode with Turbopack
+build → Build for production
+start → Start production build
+lint → Run ESLint
+migration:create → Create a new Sequelize migration
+migrate → Apply pending migrations
+migrate:rollback → Undo last migration
+migrate:rollback:all → Undo all migrations
+migrate:prod → Run migrations with .env.production
+
+---
+
+## Environment Variables
+
+Create .env.local for development and .env.production for production.
+
+Example .env.local:
+DATABASE_URL=postgres://postgres:root@localhost:5432/circle_dev
+PGSSLMODE=disable
+
+For production:
+DATABASE_URL=postgres://user:pass@host:5432/dbname
+PGSSLMODE=require
+
+---
+
+## Notes
+
+- This setup avoids sequelize-typescript to prevent deprecated dependencies like glob@7/inflight.
+- All models are defined with plain Sequelize + TypeScript typings.
+- Use npm-check-updates to keep dependencies fresh:
+  npx npm-check-updates -u
+  npm install
+
+---
+
+""")
