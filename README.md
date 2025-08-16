@@ -1,183 +1,162 @@
-# Create the README.txt content (same as README.md)
 
-readme_txt_path = Path("/mnt/data/readme.txt")
-readme_txt_path.write_text("""# Circle Next App
+# Nextjs-Sequelize Setup with RTK-Query
 
-A Next.js + TypeScript application using Sequelize ORM with PostgreSQL.
-
-## Table of Contents
-
-- [Tech Stack](#tech-stack)
-- [Project Setup](#project-setup)
-- [Database Setup](#database-setup)
-- [Migrations](#migrations)
-- [Generating Models from an Existing DB](#generating-models-from-an-existing-db)
-- [Scripts](#scripts)
-- [Environment Variables](#environment-variables)
-
----
+A boilerplate starter for building scalable apps with Next.js, Sequelize ORM, and RTK Query, implemented with Postgres.
+Comes with ready-to-use API integration, database setup, and state management out of the box.
 
 ## Tech Stack
 
-- **Frontend**: [Next.js](https://nextjs.org/) (React 19, Turbopack)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **ORM**: [Sequelize](https://sequelize.org/)
-- **Database**: PostgreSQL
-- **Auth & Crypto**: bcryptjs, jose
-- **TypeScript** for static typing
+**Client:** Next.js 15, RTK Query, TailwindCSS, Shadcn, Framer Motion, Next-Themes  
 
----
+**Server:** Node.js, Express, PostgreSQL, Sequelize
 
-## Project Setup
+## Documentation
 
-1. **Install dependencies**
-   npm install
+- [Basic Installation](#-basic-setup-system-installation)
+- [Sequelize Setup](#-sequelize-setup-guide-pre-integrated)
+- [API Reference](#api-reference)
 
-2. **Run in development**
-   npm run dev
+## 🔧 Basic Setup (System Installation)
 
-3. **Build for production**
-   npm run build
-   npm start
+1. Clone the repository,
+Open your terminal and run:
 
----
+```bash
+git clone https://github.com/prasannabiswas/Nextjs-Sequelize-with-Middleware.git
+```
 
-## Database Setup
+2. Set up environment variables,
+Find the file named env.example.
 
-This project uses Sequelize CLI with PostgreSQL.
+Rename it to .env (or .env.local, depending on your environment).
 
-### 1. Install required dependencies
+Install dependencies
+Inside the project folder, run:
+    
 
-Already included in package.json:
+```bash
+npm install
+```
+
+## 🛠️ Sequelize Setup Guide (Pre-Integrated)
+
+1. Install required dependencies:
+
+```bash
 npm install sequelize pg pg-hstore
 npm install --save-dev sequelize-cli dotenv-cli
-
-### 2. Initialize Sequelize CLI
-
 npx sequelize-cli init
+```
 
-Then move the generated config/, migrations/, and seeders/ folders into a new database/ folder.
+2. Organize project structure,
 
-### 3. .sequelizerc configuration
+Create a database folder in the root of your Next.js project.
 
-In the project root, create .sequelizerc:
+Move the config, seeders, and migrations folders inside the new database folder.
 
-const path = require('path');
+Delete the default models folder.
 
-module.exports = {
-'config': path.resolve('database', 'config', 'config.js'),
-'migrations-path': path.resolve('database', 'migrations'),
-'seeders-path': path.resolve('database', 'seeders')
-};
+Add a .sequelizerc file in the root to map Sequelize paths properly.
 
-### 4. Database config
+Update package.json with migration scripts.
 
-database/config/config.js:
-require('dotenv').config();
+3. Create and run migrations.
 
-module.exports = {
-development: {
-url: process.env.DATABASE_URL,
-dialect: 'postgres',
-logging: false
-},
-production: {
-url: process.env.DATABASE_URL,
-dialect: 'postgres',
-dialectOptions: process.env.PGSSLMODE === 'require'
-? { ssl: { require: true } }
-: {},
-logging: false
-}
-};
+```bash
+npm run migration:create -- --name <table_name_as_needed>
+```
 
----
+Edit the generated migration file for up and down logic.
 
-## Migrations
+Run migrations:
 
-### Create a migration
-
-npm run migration:create -- --name create_users
-
-### Apply migrations
-
+```bash
 npm run migrate
+```
 
-### Rollback last migration
+4. Generate models from an existing database.
+Install Sequelize Auto (for reverse-engineering database models):
 
-npm run migrate:rollback
+```bash
+npm install -g sequelize-auto
+```
 
-### Rollback all migrations
+Run the following command:
 
-npm run migrate:rollback:all
+```bash
+npx sequelize-auto -o "./models" -d <db_name> -h <host_name> -u <your_username> \
+-p <port_number> -x <your_password> -e postgres -l ts
+```
+👉 This gives you a clean Sequelize + Postgres setup inside Next.js, with optional TypeScript typings for models.
+# API Reference
 
-### Run migrations in production
+All routes live under src/app/api/* and use the App Router (app/) convention.
 
-npm run migrate:prod
+## Auth
 
----
+#### Signup
 
-## Generating Models from an Existing DB
+Create a new user account.
 
-You can reverse-engineer models from an existing PostgreSQL database using sequelize-auto.
+```http
+POST /api/auth/signup
+```
+#### Request body
+```json
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "Str0ngP@ss!"
+}
+```
 
-### Example:
+#### Responses 201 Created
 
-npx sequelize-auto \
- -o "./models" \
- -d circle_dev \
- -h localhost \
- -u postgres \
- -p 5432 \
- -x root \
- -e postgres \
- -l ts \
- --caseModel p \
- --caseFile c
+```json
+{
+  "success": true,
+  "status": 201
+}
+```
 
---caseModel p → PascalCase model names
---caseFile c → camelCase filenames
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `name`    | `string` | **Required**.              |
+| `email`   | `string` | **Required**.              |
+| `password`| `string` | **Required**.              |
 
----
+- Passwords are stored as hashes (bcrypt).
+- Email uniqueness is enforced at the DB level.
 
-## Scripts
+#### Login
 
-From package.json:
+Authenticate a user and return a session/JWT.
 
-dev → Run Next.js in dev mode with Turbopack
-build → Build for production
-start → Start production build
-lint → Run ESLint
-migration:create → Create a new Sequelize migration
-migrate → Apply pending migrations
-migrate:rollback → Undo last migration
-migrate:rollback:all → Undo all migrations
-migrate:prod → Run migrations with .env.production
+```http
+POST /api/auth/login
+```
 
----
+#### Request body
+```json
+{
+  "email": "ada@example.com",
+  "password": "Str0ngP@ss!"
+}
+```
 
-## Environment Variables
+#### Responses 201 Created
 
-Create .env.local for development and .env.production for production.
+```json
+{
+  "success": true
+}
+```
 
-Example .env.local:
-DATABASE_URL=postgres://postgres:root@localhost:5432/circle_dev
-PGSSLMODE=disable
+| Parameter | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `email`   | `string` | **Required**.                     |
+| `password`| `string` | **Required**.                     |
 
-For production:
-DATABASE_URL=postgres://user:pass@host:5432/dbname
-PGSSLMODE=require
 
----
+- The token is saved in session cookies.
 
-## Notes
-
-- This setup avoids sequelize-typescript to prevent deprecated dependencies like glob@7/inflight.
-- All models are defined with plain Sequelize + TypeScript typings.
-- Use npm-check-updates to keep dependencies fresh:
-  npx npm-check-updates -u
-  npm install
-
----
-
-""")
