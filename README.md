@@ -8,12 +8,12 @@ Comes with ready-to-use API integration, database setup, and state management ou
 
 **Client:** Next.js 15, RTK Query, TailwindCSS, Shadcn, Framer Motion, Next-Themes  
 
-**Server:** Node.js, Express, PostgreSQL, Sequelize
+**Server:** Next.js (API routes / server actions), Node.js, PostgreSQL, Sequelize, jose, bcrypt
 
 ## Documentation
 
 - [Basic Installation](#-basic-setup-system-installation)
-- [Sequelize Setup](#-sequelize-setup-guide-pre-integrated)
+- [Sequelize Setup](#sequelize-setup-guide-pre-integrated)
 - [API Reference](#api-reference)
 
 ## 🔧 Basic Setup (System Installation)
